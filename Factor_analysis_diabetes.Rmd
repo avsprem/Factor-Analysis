@@ -1,0 +1,192 @@
+---
+title: "ST405 - Mini Project"
+author: "S/18/SP/608 | S.D.A.V.S.Preamthilake"
+date: "2024-04-07"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r error=TRUE}
+data <- read.csv("D:/University/4th yr/ST405/mini project/factor analysis/diabetes.csv")
+head(data)
+```
+
+```{r error=TRUE}
+str(data)
+```
+
+```{r error=TRUE}
+data = data[,-9]
+head(data)
+```
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+corr_mat =cor(data)
+```
+
+```{r}
+corrplot(corr_mat)
+```
+
+```{r}
+library(psych)
+```
+
+```{r}
+cortest.bartlett(R=corr_mat, n=768)
+```
+
+```{r}
+eigen_vals = eigen(corr_mat)$values
+eigen_vals
+```
+
+```{r}
+ print(sum(eigen_vals))
+```
+
+```{r}
+print(cumsum(eigen_vals))
+```
+
+```{r}
+print(cumsum(eigen_vals)/8)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+n <- dim(corr_mat)[1] 
+```
+
+```{r}
+scree_tbl <- tibble(x = 1:n, y = sort(eigen(corr_mat)$value, decreasing = TRUE)) 
+```
+
+```{r}
+scree_plot <- scree_tbl |> 
+  ggplot(aes(x, y)) + 
+  geom_point() + 
+  geom_line() + 
+  theme_minimal() + 
+  scale_x_continuous(breaks = 1:n) + 
+  ggtitle("Scree plot")
+```
+
+```{r}
+scree_plot
+```
+
+```{r}
+scree_plot + geom_vline(xintercept = 3, color = "red", linetype = "dashed") + 
+annotate("text", 4.1, 2, label = "elbow point", color = "red", hjust = 0)
+```
+
+```{r}
+fa.res<-factanal(x=data, factors=3, rotation='none', method = "pc", n.obs = 329) 
+
+fa.res
+```
+
+```{r}
+fa.res<-factanal(x=data, factors=3, rotation='varimax')
+
+print(fa.res, cut=0.4)
+```
+
+```{r}
+fa.res<-factanal(x=data, factors=3, rotation='varimax', scores='Bartlett') 
+
+head(fa.res$scores)
+```
+
+```{r}
+library(lavaan)
+```
+
+```{r}
+# Define CFA model
+cfa.model <- '
+  metabolic_health =~ SkinThickness + Insulin + BMI 
+  reproductive_health =~ Pregnancies + Age 
+  glucose_metabolism =~ Glucose
+'
+```
+
+```{r}
+# Fit the CFA model
+#data <- scale(data) 
+cfa.est <- cfa(cfa.model, data = data)
+```
+
+```{r}
+summary(cfa.est, fit = TRUE)
+```
+
+```{r}
+cfa.est<-cfa(cfa.model, data=data, std.lv=TRUE)
+```
+
+```{r}
+summary(cfa.est, fit=TRUE)
+```
+
+```{r}
+# Define CFA model
+cfa.model <- '
+  metabolic_health =~ SkinThickness + Insulin + BMI 
+  reproductive_health =~ Pregnancies + Age 
+  glucose_metabolism =~ Glucose
+'
+```
+
+```{r}
+cfa.est <- cfa(cfa.model, data = data)
+```
+
+```{r}
+summary(cfa.est, fit = TRUE)
+```
+
+```{r}
+# Define the modified CFA model
+cfa.model.mod1 <- '
+  metabolic_health =~ SkinThickness + Insulin + BMI 
+  reproductive_health =~ Pregnancies + Age 
+  glucose_metabolism =~ Glucose 
+  metabolic_health ~~ reproductive_health
+'
+
+# Fit the modified CFA model
+cfa.est.mod1 <- cfa(cfa.model.mod1, data = data)
+```
+
+```{r}
+summary(cfa.est.mod1, fit = TRUE)
+```
+
+```{r}
+# Define the modified CFA model
+cfa.model.mod2 <- '
+  metabolic_health =~ SkinThickness + Insulin + BMI 
+  reproductive_health =~ Pregnancies + Age + BMI 
+  glucose_metabolism =~ Glucose
+'
+
+# Fit the modified CFA model
+cfa.est.mod2 <- cfa(cfa.model.mod2, data = data)
+```
+
+```{r}
+summary(cfa.est.mod2, fit = TRUE)
+```
